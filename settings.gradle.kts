@@ -10,7 +10,8 @@ pluginManagement {
     }
 }
 
-include("curl")
-include("googletest")
-include("jsoncpp")
+include("resiprocate")
+//include("curl")
+//include("googletest")
+//include("jsoncpp")
 include("openssl")
