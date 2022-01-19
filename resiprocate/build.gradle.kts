@@ -72,6 +72,20 @@ tasks.register<AutoconfPortTask>("buildPort") {
         )
         env("CPPFLAGS", "-fPIC -I$sysroot/include")
         env("LDFLAGS", "-L$sysroot/lib")
+
+        // The ndkports system generates unstripped libraries for
+        // debugging.  If that changes in future, this hack can
+        // potentially stop it stripping the libs:
+        //env("STRIP", "/bin/true")
+        //
+        // When gradle / NDK uses the AAR to build a final APK file,
+        // it makes a further attempt to strip the libraries and the
+        // app's build.gradle needs to include doNotStrip
+
+        // If we want to be sure the libraries are not optimized at all
+        // we can add these:
+        //env("CFLAGS", "-O0 -g")
+        //env("CXXFLAGS", "-O0 -g")
     }
 }
 
