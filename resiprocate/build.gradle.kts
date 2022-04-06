@@ -2,7 +2,9 @@
 // This is a gradle build script written using the Kotlin DSL:
 //  https://docs.gradle.org/current/userguide/kotlin_dsl.html
 
-// To use it, ensure Gradle is in $PATH and run
+// To use it, ensure Gradle is in $PATH, for example:
+//
+//         export PATH=/opt/gradle-7.3.3/bin/:$PATH
 //
 //     In the reSIProcate repository:
 //
@@ -11,7 +13,7 @@
 //
 //     In this (ndkports fork) repository:
 //
-//         gradle -PndkPath=${HOME}/Android/Sdk/ndk/23.1.7779620 release -x test
+//         gradle -PndkPath=${HOME}/Android/Sdk/ndk/23.1.7779620 release publishToMavenLocal-x test
 
 // It is modeled on the Google ndkports build script for curl:
 //  https://android.googlesource.com/platform/tools/ndkports/+/refs/heads/master/curl/build.gradle.kts
