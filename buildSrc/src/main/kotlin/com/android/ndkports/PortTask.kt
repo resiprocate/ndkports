@@ -62,6 +62,7 @@ abstract class PortTask : DefaultTask() {
         if (result.waitFor() != 0) {
             throw RuntimeException("Subprocess failed with:\n$output")
         }
+        logger.debug("Output of subprocess: $output")
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
