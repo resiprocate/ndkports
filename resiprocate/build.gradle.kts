@@ -35,6 +35,7 @@
 
 import com.android.ndkports.AutoconfPortTask
 import com.android.ndkports.CMakeCompatibleVersion
+import com.android.ndkports.CMakePortTask
 import com.android.ndkports.PrefabSysrootPlugin
 
 val portVersion = "1.13.0"  // FIXME - can we get this from configure.ac?
@@ -45,6 +46,7 @@ version = "$portVersion${rootProject.extra.get("snapshotSuffix")}"
 plugins {
     id("maven-publish")
     id("com.android.ndkports.NdkPorts")
+    distribution
 }
 
 dependencies {
@@ -55,25 +57,27 @@ ndkPorts {
     ndkPath.set(File(project.findProperty("ndkPath") as String))
     // FIXME: can we work from the source tree?
     // FIXME: override Port.kts extractSource method to call git-archive
-    source.set(project.file("/tmp/reSIProcate-snapshot.tar.gz"))
-    minSdkVersion.set(16)
+    source.set(project.file("src.tar.gz"))
+    minSdkVersion.set(19)
 }
 
 tasks.prefab {
     generator.set(PrefabSysrootPlugin::class.java)
 }
 
-tasks.register<AutoconfPortTask>("buildPort") {
-    autoconf {
-        args( // taken from reSIProcate build/android-custom-ndk
-            "--disable-versioned-soname",
-            "--enable-android",
-            "--with-ssl",
-            // "--enable-ipv6",
-            "--disable-static"
-        )
-        env("CPPFLAGS", "-fPIC -I$sysroot/include")
-        env("LDFLAGS", "-L$sysroot/lib")
+val buildTask = tasks.register<CMakePortTask>("buildPort") {
+    cmake {
+
+        // From the previous autoconf build:
+        // args( // taken from reSIProcate build/android-custom-ndk
+        //     "--disable-versioned-soname",
+        //     "--enable-android",
+        //     "--with-ssl",
+        //     // "--enable-ipv6",
+        //     "--disable-static"
+        // )
+        // env("CPPFLAGS", "-fPIC -I$sysroot/include")
+        // env("LDFLAGS", "-L$sysroot/lib")
 
         // The ndkports system generates unstripped libraries for
         // debugging.  If that changes in future, this hack can
@@ -88,6 +92,51 @@ tasks.register<AutoconfPortTask>("buildPort") {
         // we can add these:
         //env("CFLAGS", "-O0 -g")
         //env("CXXFLAGS", "-O0 -g")
+
+        arg("-DHAVE_CLOCK_GETTIME_MONOTONIC_EXITCODE=1")
+        //arg("-DCMAKE_CXX_FLAGS='-fPIC -I$sysroot/include'")
+        //arg("-DCMAKE_C_FLAGS='-fPIC -I$sysroot/include'")
+        //arg("-DCMAKE_LD_FLAGS=-L$sysroot/lib")
+        arg("-DWITH_C_ARES=OFF")
+        arg("-DWITH_SSL=ON")
+        arg("-DUSE_POPT=OFF")
+        arg("-DUSE_SIGCOMP=OFF")
+        arg("-DUSE_FMT=OFF")
+        arg("-DVERSIONED_SONAME=OFF")
+        arg("-DENABLE_ANDROID=ON")
+        arg("-DUSE_IPV6=ON")
+        arg("-DUSE_DTLS=ON")
+        arg("-DPEDANTIC_STACK=OFF")
+        arg("-DUSE_MYSQL=OFF")
+        arg("-DUSE_SOCI_POSTGRESQL=OFF")
+        arg("-DUSE_SOCI_MYSQL=OFF")
+        arg("-DUSE_POSTGRESQL=OFF")
+        arg("-DUSE_MAXMIND_GEOIP=OFF")
+        arg("-DRESIP_HAVE_RADCLI=OFF")
+        arg("-DUSE_NETSNMP=OFF")
+        arg("-DBUILD_REPRO=OFF")
+        arg("-DBUILD_REPRO_DSO_PLUGINS=OFF")
+        arg("-DBUILD_RETURN=OFF")
+        arg("-DBUILD_REND=OFF")
+        arg("-DBUILD_TFM=OFF")
+        arg("-DBUILD_ICHAT_GW=OFF")
+        arg("-DBUILD_TELEPATHY_CM=OFF")
+        arg("-DBUILD_RECON=OFF")
+        arg("-DUSE_SRTP1=OFF")
+        arg("-DBUILD_RECONSERVER=OFF")
+        arg("-DUSE_SIPXTAPI=OFF")
+        arg("-DUSE_KURENTO=OFF")
+        arg("-DUSE_GSTREAMER=OFF")
+        arg("-DUSE_LIBWEBRTC=OFF")
+        arg("-DRECON_LOCAL_HW_TESTS=OFF")
+        arg("-DDEFAULT_BRIDGE_MAX_IN_OUTPUTS=20")
+        arg("-DBUILD_P2P=OFF")
+        arg("-DBUILD_PYTHON=OFF")
+        arg("-DPYCXX_SRCDIR=/usr/src/CXX")
+        arg("-DBUILD_QPID_PROTON=OFF")
+        arg("-DRESIP_ASSERT_SYSLOG=ON")
+        arg("-DREGENERATE_MEDIA_SAMPLES=OFF")
+        arg("-DUSE_NDKPORTS_HACKS=ON")
     }
 }
 
@@ -96,7 +145,7 @@ tasks.prefabPackage {
     licensePath.set("COPYING")
     @Suppress("UnstableApiUsage") dependencies.set(
         mapOf(
-            "openssl" to "1.1.1k"
+            "openssl" to "1.1.1s"
         )
     )
     modules {
@@ -144,7 +193,24 @@ publishing {
     }
     repositories {
         maven {
-            url = uri("${rootProject.buildDir}/repository")
+            url = uri("${project.buildDir}/repository")
         }
+    }
+}
+
+distributions {
+    main {
+        contents {
+            from("${project.buildDir}/repository")
+            include("**/*.aar")
+            include("**/*.pom")
+        }
+    }
+}
+
+tasks {
+    distZip {
+        dependsOn("publish")
+        destinationDirectory.set(File(rootProject.buildDir, "distributions"))
     }
 }

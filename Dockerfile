@@ -2,6 +2,7 @@ FROM gcr.io/cloud-builders/javac:8
 
 RUN apt-get update && apt-get install -y \
     cmake \
+    pkg-config \
     curl \
     ninja-build \
     python3-pip
